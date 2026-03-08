@@ -23,15 +23,16 @@ db.sqlite3-journal
 /static/
 /media/
 
-# Machine Learning Models (can be large)
+# Machine Learning Models
 *.pkl
 *.joblib
 *.h5
 *.pt
 *.pth
 *.onnx
-# Uncomment if you want to track models:
-# !aiagent/ml_models/*.pkl
+# Force track critical ML Brain components
+!myproject/aiagent/ml_models/*.joblib
+!myproject/aiagent/ml_models/*.pkl
 
 # Environment variables
 .env

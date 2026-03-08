@@ -1,13 +1,20 @@
 
 import React, { useState } from 'react';
 import { Calendar, RefreshCw, ChefHat, Info } from 'lucide-react';
-import { getMealPlan } from '../services/apiService';
-import { UserProfile, MealPlan, UGANDAN_FOODS } from '../types';
+import { getMealPlan, getFoods } from '../services/apiService';
+import { UserProfile, MealPlan, FoodItem } from '../types';
 import { Card, Button, Badge, cn } from './UI';
 
 export const MealPlanner = ({ userProfile }: { userProfile: UserProfile }) => {
+  const [foods, setFoods] = useState<FoodItem[]>([]);
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  React.useEffect(() => {
+    getFoods().then(data => {
+      if (Array.isArray(data)) setFoods(data);
+    });
+  }, []);
 
   const generatePlan = async () => {
     setIsGenerating(true);
@@ -21,14 +28,10 @@ export const MealPlanner = ({ userProfile }: { userProfile: UserProfile }) => {
     setIsGenerating(false);
   };
 
-  const getFoodName = (id: string) => {
-    const food = UGANDAN_FOODS.find(f => f.id === id);
-    if (!food) return id.charAt(0).toUpperCase() + id.slice(1);
-
-    // If name and localName are basically the same, just show name
-    if (food.localName && food.localName.toLowerCase() !== food.name.toLowerCase()) {
-      return `${food.name} (${food.localName})`;
-    }
+  const getFoodName = (id: string | number) => {
+    // LLM might return ID as string "14" or name "Avocado"
+    const food = foods.find(f => String(f.id) === String(id) || f.name.toLowerCase() === String(id).toLowerCase());
+    if (!food) return String(id);
     return food.name;
   };
 

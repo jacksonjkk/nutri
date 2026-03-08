@@ -1,23 +1,25 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Loader2 } from 'lucide-react';
+import { Send, User, Bot, Loader2, Camera, Image as ImageIcon } from 'lucide-react';
 import Markdown from 'react-markdown';
-import { generateNutritionAdvice } from '../services/apiService';
+import { generateNutritionAdvice, analyzeFoodImage } from '../services/apiService';
 import { UserProfile } from '../types';
 import { Card, Button, cn } from './UI';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  image?: string;
 }
 
 export const NutritionChat = ({ userProfile }: { userProfile?: UserProfile }) => {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hello! I am Nutri agent, your Ugandan nutrition assistant. How can I help you eat better today?\n You can ask me about local foods, meal planning, or managing health conditions." }
+    { role: 'assistant', content: "Hello! I am Nutri agent, your Ugandan nutrition assistant. How can I help you eat better today?\n You can ask me about local foods, meal planning, or managing health conditions.\n\n**NEW:** You can now upload a photo of your meal for a quick nutritional analysis! 📸" }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -36,6 +38,33 @@ export const NutritionChat = ({ userProfile }: { userProfile?: UserProfile }) =>
     const response = await generateNutritionAdvice(userMsg, userProfile);
     setMessages(prev => [...prev, { role: 'assistant', content: response || "I'm sorry, I couldn't process that." }]);
     setIsLoading(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      setMessages(prev => [...prev, { 
+        role: 'user', 
+        content: "Analyzing this meal...",
+        image: base64 
+      }]);
+
+      const result = await analyzeFoodImage(base64);
+      
+      if (result.error) {
+        setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I couldn't analyze that image. Please try again." }]);
+      } else {
+        const content = `### 🥗 Meal Analysis\n\n**Identified Foods:** ${result.identified_foods.join(', ')}\n\n**Estimated Nutrition:**\n- ⚡ Calories: ${result.estimates.calories} kcal\n- 💪 Protein: ${result.estimates.protein}g\n- 🍞 Carbs: ${result.estimates.carbs}g\n- 🥑 Fats: ${result.estimates.fats}g\n\n**💡 Agent Insight:** ${result.insight}`;
+        setMessages(prev => [...prev, { role: 'assistant', content }]);
+      }
+      setIsLoading(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -63,6 +92,9 @@ export const NutritionChat = ({ userProfile }: { userProfile?: UserProfile }) =>
               "p-4 rounded-2xl text-sm leading-relaxed",
               msg.role === 'user' ? "bg-stone-100 text-stone-800 rounded-tr-none" : "bg-[#f5f5f0] text-stone-800 rounded-tl-none border border-stone-200"
             )}>
+              {msg.image && (
+                <img src={msg.image} alt="Uploaded meal" className="w-full h-48 object-cover rounded-xl mb-3 shadow-inner" />
+              )}
               <div className="markdown-body prose prose-stone prose-sm max-w-none">
                 <Markdown>{msg.content}</Markdown>
               </div>
@@ -86,11 +118,25 @@ export const NutritionChat = ({ userProfile }: { userProfile?: UserProfile }) =>
       </div>
 
       <div className="flex gap-2 pt-4 border-t border-stone-100">
+        <input 
+          type="file" 
+          accept="image/*" 
+          hidden 
+          ref={fileInputRef} 
+          onChange={handleImageUpload} 
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="p-3 text-stone-400 hover:text-[#F27D26] hover:bg-stone-50 rounded-full transition-all"
+          title="Analyze Meal Photo"
+        >
+          <Camera size={20} />
+        </button>
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           placeholder="Ask about Matooke, Mukene, or meal plans..."
           className="flex-1 bg-stone-50 border border-stone-200 rounded-full px-6 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 transition-all"
         />

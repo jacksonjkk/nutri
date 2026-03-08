@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Flame, Beef, Droplets, Moon, Dumbbell, Save, CheckCircle2, AlertCircle, Plus, Trash2, Utensils } from 'lucide-react';
 import { Card, Button, Badge, cn } from './UI';
-import { saveDailyLog, getDailyLogs } from '../services/apiService';
-import { UGANDAN_FOODS, FoodItem } from '../types';
+import { saveDailyLog, getDailyLogs, getFoods, getMe } from '../services/apiService';
+import { FoodItem } from '../types';
 
 interface DailyLoggerProps {
     onLogSaved?: () => void;
@@ -21,12 +21,28 @@ export const DailyLogger = ({ onLogSaved }: DailyLoggerProps) => {
         exercise_minutes: 0,
         water_intake: 2.0
     });
+    const [foods, setFoods] = useState<FoodItem[]>([]);
+    const [filteredFoods, setFilteredFoods] = useState<FoodItem[]>([]);
+    const [userProfile, setUserProfile] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-    // Fetch existing logs on mount to sync sliders
+    // Initial Data Fetch
     useEffect(() => {
-        const syncLogs = async () => {
+        const loadInitialData = async () => {
+            // 1. Fetch User Profile
+            const userData = await getMe();
+            if (userData) {
+                setUserProfile(userData);
+            }
+
+            // 2. Fetch Foods
+            const foodData = await getFoods();
+            if (Array.isArray(foodData)) {
+                setFoods(foodData);
+            }
+
+            // 3. Fetch Logs
             const logs = await getDailyLogs();
             if (Array.isArray(logs) && logs.length > 0) {
                 const todayLog = logs.find((l: any) => l.date === today);
@@ -39,8 +55,43 @@ export const DailyLogger = ({ onLogSaved }: DailyLoggerProps) => {
                 }
             }
         };
-        syncLogs();
+        loadInitialData();
     }, [today]);
+
+    // Intelligent Food Filtering
+    useEffect(() => {
+        if (foods.length === 0) return;
+
+        let filtered = [...foods];
+
+        if (userProfile && userProfile.profile_summary) {
+            const profile = userProfile.profile_summary;
+            const goal = (profile.goal || '').toLowerCase();
+            const region = (profile.region || '').toLowerCase();
+            const conditions = profile.medical_conditions || [];
+
+            // 1. Regional Filter (Prioritize)
+            // If the user is from a specific region, we don't exclude others, but we could sort them higher.
+            // For now, let's filter to keep the UI clean if we have many foods.
+            if (region) {
+                const regionalFoods = foods.filter(f => (f.region || '').toLowerCase().includes(region));
+                if (regionalFoods.length > 0) {
+                    filtered = regionalFoods;
+                }
+            }
+
+            // 2. Goal-Based Filtering
+            if (goal.includes('gain') || goal.includes('weight')) {
+                // High calorie/protein
+                filtered = filtered.sort((a, b) => (b.calories + b.protein * 4) - (a.calories + a.protein * 4));
+            } else if (goal.includes('lose') || goal.includes('diabetes')) {
+                // Low glycemic index / low calorie
+                filtered = filtered.filter(f => f.glycemic_index < 55 || f.calories < 150);
+            }
+        }
+
+        setFilteredFoods(filtered.slice(0, 12)); // Show top 12 relevant
+    }, [foods, userProfile]);
 
     const addFood = (food: FoodItem) => {
         const newList = [...selectedFoods, { food, quantity: 1 }];
@@ -73,10 +124,20 @@ export const DailyLogger = ({ onLogSaved }: DailyLoggerProps) => {
         setIsSaving(true);
         setMessage(null);
 
-        const result = await saveDailyLog(formData);
+        // Get the name of the last added food to trigger AI risk check in backend
+        const lastFood = selectedFoods.length > 0 ? selectedFoods[selectedFoods.length - 1].food.name : undefined;
+        
+        const result = await saveDailyLog({
+            ...formData,
+            food_name: lastFood
+        });
 
         if (!result.error) {
-            setMessage({ type: 'success', text: 'Daily log updated successfully!' });
+            setMessage({ 
+                type: 'success', 
+                text: 'Daily log updated successfully!',
+                swap: result.swap_suggestion 
+            } as any);
             // Clear plate after saving to avoid double-adding if they log again
             setSelectedFoods([]);
             if (onLogSaved) onLogSaved();
@@ -108,19 +169,27 @@ export const DailyLogger = ({ onLogSaved }: DailyLoggerProps) => {
                     </header>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-                        {UGANDAN_FOODS.slice(0, 9).map(food => (
+                        {filteredFoods.map(food => (
                             <button
                                 key={food.id}
                                 onClick={() => addFood(food)}
                                 className="flex flex-col items-start p-3 rounded-2xl border border-stone-100 hover:border-[#F27D26]/30 hover:bg-orange-50/30 transition-all text-left group"
                             >
-                                <span className="font-bold text-sm text-stone-700 group-hover:text-[#F27D26]">{food.name}</span>
-                                <span className="text-[10px] text-stone-400 italic">{food.localName}</span>
+                                <div className="flex justify-between w-full">
+                                    <span className="font-bold text-sm text-stone-700 group-hover:text-[#F27D26]">{food.name}</span>
+                                    {food.is_processed && <Badge className="text-[6px] h-3 bg-red-100 text-red-600 border-none">Proc.</Badge>}
+                                </div>
+                                <span className="text-[10px] text-stone-400 italic">{food.category}</span>
                                 <div className="mt-2 flex items-center gap-1 text-[10px] font-mono font-bold text-stone-500">
-                                    <Plus size={10} /> Add portion
+                                    <Plus size={10} /> {food.calories} kcal
                                 </div>
                             </button>
                         ))}
+                        {filteredFoods.length === 0 && (
+                            <div className="col-span-full py-10 text-center text-stone-400 text-xs italic">
+                                Loading matching foods for your profile...
+                            </div>
+                        )}
                     </div>
 
                     {selectedFoods.length > 0 && (
@@ -215,12 +284,34 @@ export const DailyLogger = ({ onLogSaved }: DailyLoggerProps) => {
                         </div>
 
                         {message && (
-                            <div className={cn(
-                                "p-3 rounded-xl text-[10px] font-bold flex items-center gap-2",
-                                message.type === 'success' ? "bg-emerald-500/20 text-emerald-100 border border-emerald-500/20" : "bg-red-500/20 text-red-100 border border-red-500/20"
-                            )}>
-                                {message.type === 'success' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-                                {message.text}
+                            <div className="space-y-4">
+                                <div className={cn(
+                                    "p-3 rounded-xl text-[10px] font-bold flex items-center gap-2",
+                                    message.type === 'success' ? "bg-emerald-500/20 text-emerald-100 border border-emerald-500/20" : "bg-red-500/20 text-red-100 border border-red-500/20"
+                                )}>
+                                    {message.type === 'success' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                                    {message.text}
+                                </div>
+                                
+                                {message.type === 'success' && (message as any).swap && (message as any).swap.is_risky && (
+                                    <div className="bg-white/10 p-4 rounded-xl border border-white/10 animate-in zoom-in-95">
+                                        <h5 className="text-[10px] font-black uppercase text-amber-400 mb-2 flex items-center gap-2">
+                                            <AlertCircle size={12} /> Smart Agent Suggestion
+                                        </h5>
+                                        <p className="text-xs font-medium leading-relaxed mb-3">
+                                            {(message as any).swap.reason}
+                                        </p>
+                                        {(message as any).swap.swap_suggestion && (
+                                            <div className="bg-white/5 p-2 rounded-lg flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[8px] opacity-60 uppercase font-black">Try this instead:</p>
+                                                    <p className="text-xs font-bold font-serif">{(message as any).swap.swap_suggestion.food_name}</p>
+                                                </div>
+                                                <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/20 text-[8px]">Healthier</Badge>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
 

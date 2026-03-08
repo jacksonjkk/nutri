@@ -36,9 +36,17 @@ export const signup = async (email: string, username: string, password: string, 
 
         let errorMsg = 'Signup failed';
         if (typeof data === 'object') {
-            const firstKey = Object.keys(data)[0];
-            const firstError = data[firstKey];
-            errorMsg = Array.isArray(firstError) ? `${firstKey}: ${firstError[0]}` : (data.detail || errorMsg);
+            if (data.error) {
+                errorMsg = data.error;
+            } else if (data.details) {
+                // Handle nested validation errors (e.g. { details: { email: ["..."] } })
+                const detailKey = Object.keys(data.details)[0];
+                errorMsg = `${detailKey}: ${data.details[detailKey][0]}`;
+            } else {
+                const firstKey = Object.keys(data)[0];
+                const firstError = data[firstKey];
+                errorMsg = Array.isArray(firstError) ? `${firstKey}: ${firstError[0]}` : (data.detail || errorMsg);
+            }
         }
 
         return { success: false, error: errorMsg };
@@ -183,6 +191,34 @@ export const getDailyLogs = async () => {
         });
         return await response.json();
     } catch (error) {
+        return [];
+    }
+};
+export const analyzeFoodImage = async (base64Image: string) => {
+    const token = getAuthToken();
+    try {
+        const response = await fetch(`${API_BASE_URL}/vision/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ image: base64Image })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("Vision API Error:", error);
+        return { error: 'Failed to analyze image' };
+    }
+};
+
+export const getFoods = async (region?: string) => {
+    try {
+        const url = region ? `${API_BASE_URL}/foods/?region=${encodeURIComponent(region)}` : `${API_BASE_URL}/foods/`;
+        const response = await fetch(url);
+        return await response.json();
+    } catch (error) {
+        console.error("Fetch Foods Error:", error);
         return [];
     }
 };

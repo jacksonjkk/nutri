@@ -36,6 +36,8 @@ class UserProfile(models.Model):
     medical_conditions = models.JSONField(default=list, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     district = models.CharField(max_length=100, null=True, blank=True)
+    muac_cm = models.FloatField(null=True, blank=True, help_text="Mid-Upper Arm Circumference in cm")
+    whz_score = models.FloatField(null=True, blank=True, help_text="Weight-for-Height Z-score")
 
     def __str__(self):
         return f"Profile of {self.user.email}"
@@ -51,6 +53,7 @@ class DailyLog(models.Model):
     sleep_hours = models.FloatField(default=0.0)
     exercise_minutes = models.IntegerField(default=0)
     water_intake = models.FloatField(default=0.0, help_text="Water in liters")
+    weight = models.FloatField(null=True, blank=True, help_text="Current weight in kg")
 
     class Meta:
         unique_together = ('user', 'date')
@@ -67,6 +70,7 @@ class AIInsight(models.Model):
         ('High', 'High'),
     ]
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ai_insights', null=True)
+    insight_type = models.CharField(max_length=20, default='general', choices=[('general', 'General'), ('briefing', 'Morning Briefing')])
     summary = models.TextField()
     behavioral_insight = models.TextField()
     risk_level = models.CharField(max_length=10, choices=RISK_LEVELS)
@@ -80,11 +84,52 @@ class AIInsight(models.Model):
 # --- KNOWLEDGE BASE ---
 class FoodItem(models.Model):
     name = models.CharField(max_length=100)
+    category = models.CharField(max_length=50, null=True, blank=True)
+    serving_size_grams = models.FloatField(default=100)
+    calories = models.FloatField(default=0)
+    protein = models.FloatField(default=0)
+    carbs = models.FloatField(default=0)
+    fat = models.FloatField(default=0)
+    fiber = models.FloatField(default=0)
+    sugar = models.FloatField(default=0)
+    sodium = models.FloatField(default=0)
+    iron = models.FloatField(default=0)
+    calcium = models.FloatField(default=0)
+    glycemic_index = models.FloatField(default=0)
+    is_processed = models.BooleanField(default=False)
     region = models.CharField(max_length=100)
     season = models.CharField(max_length=100, help_text="Seasonal availability")
-    price = models.DecimalField(max_digits=8, decimal_places=2, help_text="Average price per kg")
-    nutrition = models.TextField(help_text="Nutritional information (JSON or text)")
-    preparation = models.TextField(help_text="Traditional preparation methods")
+    health_tags = models.JSONField(default=list, blank=True)
+    allergens = models.JSONField(default=list, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Average price")
+    preparation = models.TextField(null=True, blank=True, help_text="Traditional preparation methods")
 
     def __str__(self):
         return self.name
+
+# --- AGENT MEMORY LAYER (Follow-up Records) ---
+class HealthAssessment(models.Model):
+    """
+    Stores snapshots of the AI Agent's decisions and screenings.
+    This provides the agent with "Long-term Memory" for better follow-ups.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='health_assessments')
+    assessment_type = models.CharField(max_length=50) # e.g., 'pediatric_clinical', 'adult_wellbeing'
+    risk_level = models.CharField(max_length=20)
+    classification = models.CharField(max_length=100)
+    clinical_notes = models.JSONField(default=list)
+    recommendations = models.JSONField(default=list)
+    
+    # Snapshot of biometrics at time of assessment
+    weight = models.FloatField(null=True)
+    muac_cm = models.FloatField(null=True)
+    whz_score = models.FloatField(null=True)
+    
+    monitoring_freq = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.assessment_type} for {self.user.email} on {self.created_at.date()}"

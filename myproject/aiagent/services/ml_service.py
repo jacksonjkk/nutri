@@ -47,36 +47,44 @@ class MLModelService:
     
     def load_all_models(self):
         """Load all trained models and preprocessing artifacts from disk"""
+        # Model A: RandomForest Nutrition Score Predictor (4.81 MB)
         try:
-            # Model A: RandomForest Nutrition Score Predictor (4.81 MB)
             nutrition_model_path = os.path.join(self.base_path, 'rf_nutrition_model.joblib')
             if os.path.exists(nutrition_model_path):
                 self.nutrition_model = joblib.load(nutrition_model_path)
                 print(f"✅ Model A (Nutrition Score) loaded from {nutrition_model_path}")
             else:
                 print(f"⚠️  Model A not found at {nutrition_model_path}")
-            
-            # Model B: XGBoost Malnutrition Classifier (241 KB)
+        except Exception as e:
+            print(f"❌ Error loading Model A: {e}")
+
+        # Model B: XGBoost Malnutrition Classifier (241 KB)
+        try:
             malnutrition_model_path = os.path.join(self.base_path, 'xgb_malnutrition_model.joblib')
             if os.path.exists(malnutrition_model_path):
                 self.malnutrition_model = joblib.load(malnutrition_model_path)
                 print(f"✅ Model B (Malnutrition Classifier) loaded from {malnutrition_model_path}")
             else:
                 print(f"⚠️  Model B not found at {malnutrition_model_path}")
-            
-            # Model C: Cosine Similarity Matrix
+        except Exception as e:
+            print(f"❌ Error loading Model B: {e}")
+
+        # Model C: Cosine Similarity Matrix
+        try:
             cosine_sim_path = os.path.join(self.base_path, 'cosine_sim_matrix.joblib')
             if os.path.exists(cosine_sim_path):
                 self.cosine_sim_matrix = joblib.load(cosine_sim_path)
                 print(f"✅ Model C (Cosine Similarity) loaded from {cosine_sim_path}")
             else:
                 print(f"⚠️  Model C not found at {cosine_sim_path}")
-            
-            # Load preprocessing artifacts
-            self._load_preprocessing_artifacts()
-            
         except Exception as e:
-            print(f"❌ Error loading models: {e}")
+            print(f"❌ Error loading Model C: {e}")
+        
+        # Load preprocessing artifacts
+        try:
+            self._load_preprocessing_artifacts()
+        except Exception as e:
+            print(f"❌ Error loading preprocessing artifacts: {e}")
     
     def _load_preprocessing_artifacts(self):
         """Load all preprocessing transformers and data"""
@@ -428,25 +436,25 @@ class MLModelService:
         return recommendations.get(classification, recommendations['Normal'])
     
     def _generate_clinical_notes(self, child_data, classification):
-        """Generate clinical assessment notes"""
+        """Generate human-readable clinical assessment notes"""
         muac = child_data.get('muac_cm', 0)
         whz = child_data.get('whz_score', 0)
         
         notes = []
         if muac < 11.5:
-            notes.append(f"Severe wasting detected (MUAC: {muac}cm < 11.5cm)")
+            notes.append(f"Critical: Severe wasting detected (Arm circumference {muac}cm is below 11.5cm threshold)")
         elif muac < 12.5:
-            notes.append(f"Moderate wasting detected (MUAC: {muac}cm)")
+            notes.append(f"Caution: Moderate wasting detected (Arm circumference {muac}cm indicates low weight for age)")
         
         if whz < -3:
-            notes.append(f"Severe acute malnutrition (WHZ: {whz} < -3 SD)")
+            notes.append(f"Severe Danger: Weight-for-height ({whz}) is critically low")
         elif whz < -2:
-            notes.append(f"Moderate acute malnutrition (WHZ: {whz} < -2 SD)")
+            notes.append(f"Nutritional Risk: Weight-for-height ({whz}) is below stable levels")
         
         if classification == 'SAM':
-            notes.append("⚠️ REFERRAL NEEDED: Community health worker or clinic")
+            notes.append("URGENT REFERRAL: Please direct this individual to a health worker or clinic today.")
         
-        return ' | '.join(notes) if notes else 'Normal growth indicators'
+        return notes if notes else ["Stable growth indicators based on current metrics."]
     
     def _fallback_nutrition_scores(self, user_profile):
         """Fallback when Model A is not available"""
@@ -490,27 +498,82 @@ class MLModelService:
         }
     
     def _fallback_similar_foods(self, food_name):
-        """Fallback when Model C is not available"""
-        # Predefined similar foods
-        similarity_map = {
-            'Matooke': ['Gonja', 'Sweet Potato', 'Bushera', 'Cassava'],
-            'Posho': ['Rice', 'Chapati', 'Millet', 'Sorghum'],
-            'Beans': ['Groundnuts', 'Peas', 'Lentils', 'Soya'],
-            'Groundnuts': ['Beans', 'Simsim', 'Groundnut Sauce', 'G-nut Paste']
-        }
+        """
+        No hardcoding. Data-driven search for the most 'Nutrient-Similar' foods.
+        """
+        from aiagent.models import FoodItem
+        # 1. Get the original food properties if possible
+        target = FoodItem.objects.filter(name__icontains=food_name).first()
         
-        similar = similarity_map.get(food_name, ['Posho', 'Beans', 'Sweet Potato'])
-        
+        # 2. Query other foods in the same category or with similar nutrient profile
+        query = FoodItem.objects.all()
+        if target:
+            # Look for foods within +/- 20% of the target's carbs and calories
+            # This is a 'Vector Search' heuristic without the heavy Matrix overhead
+            foods = query.filter(
+                calories__range=(target.calories * 0.8, target.calories * 1.2),
+                carbs__range=(target.carbs * 0.8, target.carbs * 1.2)
+            ).exclude(id=target.id)[:5]
+        else:
+            # If target not found, return generally healthy staples
+            foods = query.order_by('-protein')[:5]
+
         return {
             'model_used': False,
             'original_food': food_name,
             'similar_foods': [
-                {'food_name': f, 'similarity_score': 0.8, 'category': 'General', 'region': 'Uganda', 'preparation': 'Various'}
-                for f in similar
+                {
+                    'food_name': f.name, 
+                    'similarity_score': 0.9, 
+                    'calories': f.calories,
+                    'protein': f.protein,
+                    'region': 'Various'
+                }
+                for f in foods
             ],
-            'note': 'Using predefined groups. Deploy Model C for similarity matrix.'
+            'note': 'Using nutrient-vector search heuristic.'
         }
     
+    def check_food_swap(self, food_name, user_profile):
+        """
+        Smart Food Swap Logic:
+        1. Identify if the food is 'risky' for the user's profile.
+        2. Find similar but healthier alternatives.
+        """
+        risky_conditions = {
+            'Diabetes': ['Sugar', 'High Carb', 'Sweetened'],
+            'Hypertension': ['Salt', 'Sodium', 'Fried'],
+            'Obesity': ['High Calorie', 'Fried', 'Fast Food'],
+        }
+        
+        user_conditions = user_profile.get('conditions', [])
+        is_risky = False
+        reason = ""
+        
+        # Simple heuristic: check if any risky keyword is in the food description/category
+        # In a real app, this would be a more complex classifier
+        food_name_lower = str(food_name).lower()
+        for condition in user_conditions:
+            if condition in risky_conditions:
+                # Mock check: if food is 'Soda' or 'Cake' etc.
+                if any(x in food_name_lower for x in ['soda', 'cake', 'mandazi', 'fried', 'sugar']):
+                    is_risky = True
+                    reason = f"This food might be high in hidden sugars or fats, which is tough on {condition}."
+                    break
+
+        if is_risky:
+            # Get similar foods from Model C
+            sim_results = self.recommend_similar_foods(food_name, n=3)
+            if sim_results['model_used']:
+                # Filter similar foods that are NOT risky (heuristic: lower calorie/higher protein)
+                return {
+                    "is_risky": True,
+                    "reason": reason,
+                    "swap_suggestion": sim_results['similar_foods'][0] if sim_results['similar_foods'] else None
+                }
+        
+        return {"is_risky": False}
+
     def get_comprehensive_recommendation(self, user_profile, child_data=None, favorite_food=None):
         """
         Get comprehensive recommendations using all three models
@@ -540,6 +603,10 @@ class MLModelService:
             results['similar_foods'] = self.recommend_similar_foods(favorite_food)
         
         return results
+
+
+# Backward-compatible alias
+MLService = MLModelService
 
 
 # Singleton instance

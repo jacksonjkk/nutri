@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { Search, Info, Leaf, Beef, Apple, Utensils, Star } from 'lucide-react';
-import { UGANDAN_FOODS, FoodItem, UserProfile } from '../types';
+import { getFoods } from '../services/apiService';
+import { FoodItem, UserProfile } from '../types';
 import { Card, Badge, cn } from './UI';
 
 const CategoryIcon = ({ category }: { category: FoodItem['category'] }) => {
@@ -15,8 +16,15 @@ const CategoryIcon = ({ category }: { category: FoodItem['category'] }) => {
 };
 
 export const FoodExplorer = ({ userProfile }: { userProfile: UserProfile }) => {
+  const [foods, setFoods] = useState<FoodItem[]>([]);
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<FoodItem['category'] | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
+
+  React.useEffect(() => {
+    getFoods().then(data => {
+      if (Array.isArray(data)) setFoods(data);
+    });
+  }, []);
 
   const getRecommendation = (food: FoodItem) => {
     const goals = userProfile.goals || [];
@@ -41,10 +49,9 @@ export const FoodExplorer = ({ userProfile }: { userProfile: UserProfile }) => {
     return null;
   };
 
-  const filteredFoods = UGANDAN_FOODS.filter(food => {
-    const matchesSearch = food.name.toLowerCase().includes(search.toLowerCase()) ||
-      food.localName?.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || food.category === selectedCategory;
+  const filteredFoods = foods.filter(food => {
+    const matchesSearch = food.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || (food.category && food.category.toLowerCase().includes(selectedCategory.toLowerCase()));
     return matchesSearch && matchesCategory;
   });
 
@@ -99,8 +106,13 @@ export const FoodExplorer = ({ userProfile }: { userProfile: UserProfile }) => {
                   <p className="text-xs text-stone-500 italic">{food.localName}</p>
                 </div>
                 <div className="p-2 bg-stone-50 rounded-xl text-[#5A5A40]">
-                  <CategoryIcon category={food.category} />
+                  <CategoryIcon category={food.category as any} />
                 </div>
+              </div>
+
+              <div className="flex flex-wrap gap-1 mb-4">
+                <Badge className="text-[10px] bg-sky-50 text-sky-600 border-sky-100">{food.region}</Badge>
+                <Badge className="text-[10px] bg-amber-50 text-amber-600 border-amber-100">{food.season}</Badge>
               </div>
 
               <p className="text-sm text-stone-600 mb-4 line-clamp-2">{food.description}</p>
@@ -117,10 +129,9 @@ export const FoodExplorer = ({ userProfile }: { userProfile: UserProfile }) => {
               </div>
 
               <div className="flex flex-wrap gap-1">
-                {food.seasonalAvailability.slice(0, 4).map(month => (
-                  <Badge key={month} className="text-[9px] py-0.5">{month}</Badge>
+                {food.health_tags.map(tag => (
+                  <Badge key={tag} className="text-[9px] py-0.5">{tag}</Badge>
                 ))}
-                {food.seasonalAvailability.length > 4 && <Badge className="text-[9px] py-0.5">...</Badge>}
               </div>
             </Card>
           );

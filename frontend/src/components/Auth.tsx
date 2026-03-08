@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { login, signup } from '../services/apiService';
 import { Card, Button, cn } from './UI';
-import { Mail, Lock, User, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, Eye, EyeOff, Activity } from 'lucide-react';
 
 const UGANDA_REGIONS: Record<string, string[]> = {
     'Central': ['Kampala', 'Mukono', 'Wakiso', 'Masaka', 'Mpigi', 'Luwero', 'Mubende', 'Kayunga', 'Rakai', 'Sembabule', 'Lyantonde', 'Mityana', 'Nakaseke'],
@@ -59,7 +59,7 @@ export const Auth = ({ onLogin }: { onLogin: () => void }) => {
                 const res = await signup(email, username, password, additionalData);
                 if (res.success) {
                     setIsLogin(true);
-                    setError('VHT Account created! Please login.');
+                    setError(isVht ? 'VHT Account created! Please login.' : 'Account created successfully! Please login.');
                 } else {
                     setError(res.error || 'Signup failed');
                 }
@@ -106,10 +106,16 @@ export const Auth = ({ onLogin }: { onLogin: () => void }) => {
 
                 {error && (
                     <div className={cn(
-                        "p-3 rounded-lg text-xs mb-6 text-center",
-                        error.includes('successful') || error.includes('created') ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                        "p-4 rounded-2xl text-sm mb-6 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm",
+                        error.includes('successful') || error.includes('created') 
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100" 
+                            : "bg-red-50 text-red-700 border border-red-100"
                     )}>
-                        {error}
+                        {error.includes('successful') || error.includes('created') 
+                            ? <div className="w-2 h-2 rounded-full animate-pulse bg-emerald-500" />
+                            : <Activity size={16} className="text-red-400" />
+                        }
+                        <span className="flex-1">{error}</span>
                     </div>
                 )}
 

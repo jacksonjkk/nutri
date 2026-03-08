@@ -10,7 +10,8 @@ import {
   TrendingUp,
   Globe,
   LogOut,
-  ClipboardList
+  ClipboardList,
+  Utensils
 } from 'lucide-react';
 import { UserProfile, Language, DashboardData } from './types';
 import { Card, Button, Badge, cn } from './components/UI';
@@ -23,6 +24,7 @@ import { Profile } from './components/Profile';
 import { DailyLogger } from './components/DailyLogger';
 import { VHTDashboard } from './components/VHTDashboard';
 import { getAuthToken, logout, getMe, completeOnboarding } from './services/apiService';
+import { DashboardCharts } from './components/DashboardCharts';
 
 const INITIAL_PROFILE: UserProfile = {
   name: "Guest",
@@ -53,56 +55,63 @@ export default function App() {
   }, [isAuthenticated]);
 
   const checkUserStatus = async () => {
-    const data = await getMe();
-    if (!data) return;
+    try {
+      const data = await getMe();
+      if (!data) return;
 
-    if (data.role) {
-      setUserRole(data.role as any);
-    }
-
-    if (data.onboarding_completed === false) {
-      setNeedsOnboarding(true);
-    } else if (data.profile_summary) {
-      const profile = data.profile_summary;
-
-      // ... same profile mapping ...
-      let activityLevel = profile.activity_level || 'moderate';
-      if (activityLevel === 'very active') activityLevel = 'very_active';
-
-      let currentGoal = profile.goal || 'maintenance';
-      if (currentGoal === 'gain weight') currentGoal = 'malnutrition';
-      if (currentGoal === 'lose weight') currentGoal = 'obesity';
-
-      setUserProfile({
-        name: profile.full_name || data.username || "Anonymous",
-        age: profile.age || 25,
-        gender: profile.gender || 'male',
-        weight: profile.weight || 65,
-        height: profile.height || 170,
-        activityLevel: activityLevel as any,
-        conditions: profile.medical_conditions || [],
-        goals: [currentGoal as any],
-        region: profile.region || "Region Not Set",
-        language: profile.preferred_language || "en"
-      });
-
-      if (data.goal_progress && data.nutrition_metrics) {
-        setDashboardData({
-          bmi: data.goal_progress.bmi,
-          bmiCategory: data.goal_progress.bmi_category,
-          bmr: data.goal_progress.bmr,
-          tdee: data.goal_progress.tdee,
-          avgCalories: data.nutrition_metrics.avg_calories,
-          consistencyScore: data.nutrition_metrics.consistency_score,
-          calorieTrend: data.nutrition_metrics.calorie_trend,
-          aiInsight: data.ai_insight ? {
-            summary: data.ai_insight.summary,
-            behavioral_insight: data.ai_insight.behavioral_insight,
-            risk_level: data.ai_insight.risk_level
-          } : undefined
-        });
+      if (data.role) {
+        setUserRole(data.role as any);
       }
-      setNeedsOnboarding(false);
+
+      if (data.onboarding_completed === false) {
+        setNeedsOnboarding(true);
+      } else if (data.profile_summary) {
+        const profile = data.profile_summary;
+
+        let activityLevel = profile.activity_level || 'moderate';
+        if (activityLevel === 'very active') activityLevel = 'very_active';
+
+        let currentGoal = profile.goal || 'maintenance';
+        if (currentGoal === 'gain weight') currentGoal = 'malnutrition';
+        if (currentGoal === 'lose weight') currentGoal = 'obesity';
+
+        setUserProfile({
+          name: profile.full_name || data.username || "Anonymous",
+          age: profile.age || 25,
+          gender: profile.gender || 'male',
+          weight: profile.weight || 65,
+          height: profile.height || 170,
+          activityLevel: activityLevel as any,
+          conditions: profile.medical_conditions || [],
+          goals: [currentGoal as any],
+          region: profile.region || "Region Not Set",
+          language: profile.preferred_language || "en"
+        });
+
+        if (data.goal_progress && data.nutrition_metrics) {
+          setDashboardData({
+            bmi: data.goal_progress.bmi,
+            bmiCategory: data.goal_progress.bmi_category,
+            bmr: data.goal_progress.bmr,
+            tdee: data.goal_progress.tdee,
+            avgCalories: data.nutrition_metrics.avg_calories,
+            consistencyScore: data.nutrition_metrics.consistency_score,
+            calorieTrend: data.nutrition_metrics.calorie_trend,
+            aiInsight: data.ai_insight ? {
+              insight_type: data.ai_insight.insight_type,
+              summary: data.ai_insight.summary,
+              behavioral_insight: data.ai_insight.behavioral_insight,
+              risk_level: data.ai_insight.risk_level,
+              motivation: data.ai_insight.motivation
+            } : undefined,
+            predictedMeal: data.predicted_meal,
+            trendData: data.trend_data || []
+          });
+        }
+        setNeedsOnboarding(false);
+      }
+    } catch (err) {
+      console.error("Dashboard Sync Error:", err);
     }
   };
 
@@ -254,29 +263,44 @@ export default function App() {
         <div className="max-w-5xl">
           {activeTab === 'dashboard' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="md:col-span-2 bg-white relative overflow-hidden group">
+              <Card className={cn(
+                "md:col-span-2 relative overflow-hidden group",
+                dashboardData?.aiInsight?.insight_type === 'briefing' 
+                  ? "bg-gradient-to-br from-[#5A5A40] to-[#3A3A20] text-white border-none" 
+                  : "bg-white"
+              )}>
                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                   <Heart size={120} />
                 </div>
                 <div className="relative z-10">
                   <Badge className={cn(
                     "mb-4 border",
-                    dashboardData?.aiInsight?.risk_level === 'Low' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                      dashboardData?.aiInsight?.risk_level === 'Medium' ? "bg-amber-50 text-amber-600 border-amber-100" :
-                        dashboardData?.aiInsight?.risk_level === 'High' ? "bg-red-50 text-red-600 border-red-100" :
-                          "bg-stone-50 text-stone-600 border-stone-100"
+                    dashboardData?.aiInsight?.insight_type === 'briefing'
+                      ? "bg-white/10 text-white border-white/20"
+                      : (dashboardData?.aiInsight?.risk_level === 'Low' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                         dashboardData?.aiInsight?.risk_level === 'Medium' ? "bg-amber-50 text-amber-600 border-amber-100" :
+                         dashboardData?.aiInsight?.risk_level === 'High' ? "bg-red-50 text-red-600 border-red-100" :
+                         "bg-stone-50 text-stone-600 border-stone-100")
                   )}>
-                    Health Status: {dashboardData?.aiInsight?.risk_level === 'Low' ? 'Stable' :
+                    {dashboardData?.aiInsight?.insight_type === 'briefing' ? "☀️ Your Morning Mission" : `Health Status: ${
+                      dashboardData?.aiInsight?.risk_level === 'Low' ? 'Stable' :
                       dashboardData?.aiInsight?.risk_level === 'Medium' ? 'Warning' :
-                        dashboardData?.aiInsight?.risk_level === 'High' ? 'Action Required' : 'Analyzing...'}
+                      dashboardData?.aiInsight?.risk_level === 'High' ? 'Action Required' : 'Analyzing...'
+                    }`}
                   </Badge>
                   <h3 className="text-2xl font-serif font-bold mb-2">
                     {dashboardData?.aiInsight?.summary || "Personalized Health AI Analysis"}
                   </h3>
-                  <p className="text-stone-500 text-sm mb-6 max-w-md">
+                  <p className={cn(
+                    "text-sm mb-6 max-w-md",
+                    dashboardData?.aiInsight?.insight_type === 'briefing' ? "text-white/80" : "text-stone-500"
+                  )}>
                     {dashboardData?.aiInsight?.behavioral_insight ||
                       "Log your meals and activities so our AI Agent can provide targeted nutritional insights grounded in Ugandan food data."}
                   </p>
+                  {dashboardData?.aiInsight?.motivation && (
+                    <p className="text-xs italic font-medium mb-6 opacity-90">"{dashboardData.aiInsight.motivation}"</p>
+                  )}
                   <div className="flex gap-4">
                     <Button onClick={() => setActiveTab('planner')}>View Meal Plan</Button>
                     <Button variant="outline" onClick={() => setActiveTab('chat')}>Ask AI Advice</Button>
@@ -284,17 +308,59 @@ export default function App() {
                 </div>
               </Card>
 
+              {/* Smart Prediction Card (AGENT LOGIC) */}
+              <Card className="bg-[#FAF9F6] border-stone-200 p-6 flex flex-col justify-between group">
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 rounded-full bg-[#F27D26]/10 flex items-center justify-center text-[#F27D26]">
+                      <Utensils size={20} />
+                    </div>
+                    <Badge className="text-[10px] border-stone-200">Prediction</Badge>
+                  </div>
+                  {dashboardData?.predictedMeal?.is_fallback ? (
+                    <div className="space-y-4">
+                      <p className="text-stone-500 text-xs leading-relaxed">
+                        The <strong>NutriAgent Brain</strong> is in learning mode. Log your first meal today so the AI can start predicting your patterns!
+                      </p>
+                      <Button 
+                        onClick={() => setActiveTab('logs')}
+                        className="w-full bg-[#5A5A40] text-white py-3 rounded-xl text-xs font-bold"
+                      >
+                        Log Your First Meal
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-stone-500 text-xs mb-4">
+                        Based on your historical eating patterns, the AI expects you to enjoy:
+                        <strong className="block mt-1 text-stone-800 text-sm">
+                          {dashboardData?.predictedMeal?.name || 'Matooke & Beef Stew'}
+                        </strong>
+                      </p>
+                      <Button 
+                        onClick={() => setActiveTab('logs')}
+                        className="w-full bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 shadow-none text-xs font-bold py-3"
+                      >
+                        Confirm & Log This Meal
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </Card>
+            
               <Card className="bg-[#F27D26] text-white">
                 <h3 className="text-lg font-serif font-bold mb-4">Quick Stats</h3>
                 <div className="space-y-4">
                   <div className="flex flex-col gap-1 border-b border-white/20 pb-3">
                     <span className="text-[10px] uppercase tracking-wider opacity-70">Body Mass Index (BMI)</span>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-mono font-black">{dashboardData?.bmi || '---'}</span>
+                      <span className="text-2xl font-mono font-black">
+                        {(dashboardData?.bmi !== null && dashboardData?.bmi !== undefined) ? dashboardData.bmi : '---'}
+                      </span>
                       <span className={cn(
                         "text-[10px] px-2 py-0.5 rounded-full font-bold",
                         (() => {
-                          const cat = dashboardData?.bmiCategory.toLowerCase() || '';
+                          const cat = dashboardData?.bmiCategory?.toLowerCase() || '';
                           if (cat.includes('normal') || cat.includes('healthy')) return "bg-emerald-500 text-white";
                           if (cat.includes('underweight') || cat.includes('overweight') || cat.includes('obesity') || cat.includes('average')) return "bg-red-500 text-white";
                           return "bg-white/20 text-white";
@@ -306,16 +372,33 @@ export default function App() {
                   </div>
                   <div className="flex justify-between items-center border-b border-white/20 pb-2">
                     <span className="text-xs opacity-80">Daily Goal (TDEE)</span>
-                    <span className="font-mono font-bold text-sm">{dashboardData?.tdee.toLocaleString() || '---'} kcal</span>
+                    <span className="font-mono font-bold text-sm">
+                      {(dashboardData?.tdee !== undefined && dashboardData?.tdee !== null) ? dashboardData.tdee.toLocaleString() : '---'} kcal
+                    </span>
                   </div>
                   <div className="flex justify-between items-center border-b border-white/20 pb-2">
                     <span className="text-xs opacity-80">Metabolic Rate (BMR)</span>
-                    <span className="font-mono font-bold text-sm">{dashboardData?.bmr.toLocaleString() || '---'} kcal</span>
+                    <span className="font-mono font-bold text-sm">
+                      {(dashboardData?.bmr !== undefined && dashboardData?.bmr !== null) ? dashboardData.bmr.toLocaleString() : '---'} kcal
+                    </span>
                   </div>
                 </div>
                 <div className="mt-6 p-3 bg-white/10 rounded-2xl text-[10px] leading-relaxed">
                   Tip: Drinking water before meals can help with portion control during lunch.
                 </div>
+              </Card>
+
+              <Card className="md:col-span-3 bg-white">
+                <div className="flex items-center justify-between mb-8">
+                   <h4 className="text-lg font-serif font-bold flex items-center gap-2">
+                    <TrendingUp size={20} className="text-[#F27D26]" />
+                    Weekly Nutrition Progress
+                  </h4>
+                  <div className="text-[10px] bg-stone-50 text-stone-500 font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-stone-100">
+                    Live Data
+                  </div>
+                </div>
+                <DashboardCharts data={dashboardData?.trendData || []} />
               </Card>
 
               <div className="md:col-span-3">

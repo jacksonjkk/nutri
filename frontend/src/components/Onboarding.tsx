@@ -123,8 +123,8 @@ export const Onboarding = ({ onComplete }: { onComplete: (data: OnboardingData) 
                                 <label className="text-xs font-bold text-stone-500 uppercase">Age</label>
                                 <input
                                     type="number"
-                                    value={data.age}
-                                    onChange={(e) => setData({ ...data, age: parseInt(e.target.value) })}
+                                    value={data.age || ''}
+                                    onChange={(e) => setData({ ...data, age: parseInt(e.target.value) || 0 })}
                                     className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-4 text-sm"
                                 />
                             </div>
@@ -143,8 +143,8 @@ export const Onboarding = ({ onComplete }: { onComplete: (data: OnboardingData) 
                                 <label className="text-xs font-bold text-stone-500 uppercase">Weight (kg)</label>
                                 <input
                                     type="number"
-                                    value={data.weight}
-                                    onChange={(e) => setData({ ...data, weight: parseFloat(e.target.value) })}
+                                    value={data.weight || ''}
+                                    onChange={(e) => setData({ ...data, weight: parseFloat(e.target.value) || 0 })}
                                     className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-4 text-sm"
                                 />
                             </div>
@@ -152,8 +152,8 @@ export const Onboarding = ({ onComplete }: { onComplete: (data: OnboardingData) 
                                 <label className="text-xs font-bold text-stone-500 uppercase">Height (cm)</label>
                                 <input
                                     type="number"
-                                    value={data.height}
-                                    onChange={(e) => setData({ ...data, height: parseFloat(e.target.value) })}
+                                    value={data.height || ''}
+                                    onChange={(e) => setData({ ...data, height: parseFloat(e.target.value) || 0 })}
                                     className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-4 text-sm"
                                 />
                             </div>

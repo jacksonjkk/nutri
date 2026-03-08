@@ -33,10 +33,14 @@ export const VHTDashboard = () => {
         activity_level: 'moderate',
         goal: 'maintenance',
         region: '',
-        district: ''
+        district: '',
+        muac_cm: 14.5,
+        whz_score: 0
     });
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [selectedIndividual, setSelectedIndividual] = useState<any>(null);
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -61,7 +65,8 @@ export const VHTDashboard = () => {
                 full_name: '', phone_number: '',
                 age: 30, gender: 'male', height: 170, weight: 65,
                 activity_level: 'moderate', goal: 'maintenance',
-                region: '', district: ''
+                region: '', district: '',
+                muac_cm: 14.5, whz_score: 0
             });
             fetchData();
             setTimeout(() => setView('list'), 2000);
@@ -174,9 +179,21 @@ export const VHTDashboard = () => {
                                                     </p>
                                                 </div>
                                             </div>
-                                            <Badge className={individual.onboarding_completed ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}>
-                                                {individual.onboarding_completed ? 'Profile Live' : 'Pending'}
-                                            </Badge>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <Badge className={individual.onboarding_completed ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}>
+                                                    {individual.onboarding_completed ? 'Profile Live' : 'Pending'}
+                                                </Badge>
+                                                {individual.screening && (
+                                                    <Badge className={cn(
+                                                        "font-black text-[9px]",
+                                                        individual.screening.classification === 'SAM' ? "bg-red-500 text-white" :
+                                                        individual.screening.classification === 'MAM' ? "bg-orange-400 text-white" :
+                                                        "bg-emerald-500 text-white"
+                                                    )}>
+                                                        {individual.screening.classification}
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-stone-50">
@@ -194,8 +211,11 @@ export const VHTDashboard = () => {
                                             </div>
                                         </div>
 
-                                        <button className="w-full mt-6 py-3 rounded-xl bg-stone-50 text-stone-400 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 group-hover:bg-[#5A5A40] group-hover:text-white transition-all">
-                                            Follow Up Details
+                                        <button 
+                                            onClick={() => { setSelectedIndividual(individual); setShowModal(true); }}
+                                            className="w-full mt-6 py-3 rounded-xl bg-stone-50 text-stone-400 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 group-hover:bg-[#5A5A40] group-hover:text-white transition-all"
+                                        >
+                                            {individual.screening?.type === 'pediatric_clinical' ? 'Clinical Follow Up' : 'View Health Profile'}
                                             <ChevronRight size={14} />
                                         </button>
                                     </Card>
@@ -278,12 +298,11 @@ export const VHTDashboard = () => {
                                             />
                                         </div>
                                     </div>
-
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-2">Nutrition Goal</label>
                                         <select
                                             value={regForm.goal} onChange={e => setRegForm({ ...regForm, goal: e.target.value })}
-                                            className="w-full bg-stone-50 border border-stone-100 rounded-2xl px-6 py-4 text-sm outline-none shadow-sm"
+                                            className="w-full bg-white border border-stone-200 rounded-2xl px-6 py-4 text-sm outline-none shadow-sm focus:ring-2 focus:ring-[#F27D26]/10"
                                         >
                                             <option value="maintenance">Maintenance (General Health)</option>
                                             <option value="malnutrition">Gain Weight (Target Malnutrition)</option>
@@ -292,7 +311,36 @@ export const VHTDashboard = () => {
                                             <option value="child_growth">Child Growth (Infant/Child)</option>
                                         </select>
                                     </div>
+
+                                    {/* Conditional Child Section - Only for children/adolescents under 18 */}
+                                    {(regForm.age <= 18 && (regForm.goal === 'child_growth' || regForm.goal === 'malnutrition')) && (
+                                        <div className="p-6 bg-amber-50/50 rounded-3xl border border-amber-100 space-y-4 animate-in fade-in slide-in-from-top-2">
+                                            <h4 className="text-[10px] font-black uppercase text-amber-600 tracking-widest flex items-center gap-2">
+                                                <Baby size={14} /> Pediatric Clinical Screening (Under 18)
+                                            </h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-2">MUAC (cm)</label>
+                                                    <input
+                                                        type="number" step="0.1" value={regForm.muac_cm} onChange={e => setRegForm({ ...regForm, muac_cm: parseFloat(e.target.value) })}
+                                                        placeholder="Arm Circumference"
+                                                        className="w-full bg-white border border-stone-100 rounded-2xl px-6 py-4 text-sm outline-none shadow-sm"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-2">WHZ Score</label>
+                                                    <input
+                                                        type="number" step="0.1" value={regForm.whz_score} onChange={e => setRegForm({ ...regForm, whz_score: parseFloat(e.target.value) })}
+                                                        placeholder="Weight-for-Height Z"
+                                                        className="w-full bg-white border border-stone-100 rounded-2xl px-6 py-4 text-sm outline-none shadow-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <p className="text-[9px] text-amber-500 italic px-2">MUAC/WHZ are specialized metrics for pediatric assessment only.</p>
+                                        </div>
+                                    )}
                                 </div>
+
 
                                 <div className="space-y-4">
                                     <h3 className="text-sm font-black uppercase text-stone-400 tracking-widest flex items-center gap-2">
@@ -364,6 +412,105 @@ export const VHTDashboard = () => {
                     </div>
                 )}
             </main>
+
+            {/* Follow Up Modal */}
+            {showModal && selectedIndividual && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-stone-900/60 backdrop-blur-sm animate-in fade-in">
+                    <Card className="w-full max-w-2xl bg-white border-none shadow-2xl overflow-hidden rounded-[2rem]">
+                        <div className="p-8 bg-[#5A5A40] text-white flex justify-between items-start">
+                            <div className="space-y-1">
+                                <h2 className="text-2xl font-serif font-bold">{selectedIndividual.profile?.full_name}</h2>
+                                <p className="text-white/60 text-[10px] uppercase font-black tracking-widest font-sans">Clinical Follow-up Profile</p>
+                            </div>
+                            <button onClick={() => setShowModal(false)} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors text-white">
+                                <ChevronRight className="rotate-90" size={24} />
+                            </button>
+                        </div>
+
+                        <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh]">
+                            {selectedIndividual.screening ? (
+                                <>
+                                    <div className="flex items-center gap-6 p-6 rounded-3xl bg-stone-50 border border-stone-100">
+                                        <div className={cn(
+                                            "w-16 h-16 rounded-2xl flex items-center justify-center text-white text-xl font-black",
+                                            selectedIndividual.screening.classification === 'SAM' ? "bg-red-500 shadow-lg shadow-red-200" :
+                                            selectedIndividual.screening.classification === 'MAM' ? "bg-orange-400 shadow-lg shadow-orange-200" :
+                                            "bg-emerald-500 shadow-lg shadow-emerald-200"
+                                        )}>
+                                            {selectedIndividual.screening.classification}
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase font-black text-stone-400 tracking-widest mb-2">Primary Assessments</p>
+                                            <div className="space-y-2">
+                                                {Array.isArray(selectedIndividual.screening.clinical_notes) ? (
+                                                    selectedIndividual.screening.clinical_notes.map((note: string, i: number) => (
+                                                        <div key={i} className="flex items-start gap-2 text-xs font-bold text-stone-700 leading-tight">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+                                                            <span>{note}</span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-sm font-bold text-stone-700">{selectedIndividual.screening.clinical_notes}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <h3 className="text-sm font-black uppercase text-stone-400 tracking-widest flex items-center gap-2">
+                                            <Target size={16} /> Treatment Pathway
+                                        </h3>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {selectedIndividual.screening.recommendations.map((rec: string, idx: number) => (
+                                                <div key={idx} className="flex gap-4 items-start p-4 rounded-2xl bg-white border border-stone-100 shadow-sm">
+                                                    <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 text-xs font-black">
+                                                        {idx + 1}
+                                                    </div>
+                                                    <p className="text-sm text-stone-600 leading-relaxed">{rec}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {selectedIndividual.screening && (
+                                        <div className={cn(
+                                            "p-6 rounded-3xl border",
+                                            selectedIndividual.screening.risk_level === 'High' ? "bg-red-50 border-red-100" : 
+                                            selectedIndividual.screening.risk_level === 'Medium' ? "bg-amber-50 border-amber-100" :
+                                            "bg-emerald-50 border-emerald-100"
+                                        )}>
+                                            <p className={cn(
+                                                "text-xs font-bold flex items-center gap-2 uppercase tracking-wide",
+                                                selectedIndividual.screening.risk_level === 'High' ? "text-red-600" : 
+                                                selectedIndividual.screening.risk_level === 'Medium' ? "text-amber-600" :
+                                                "text-emerald-600"
+                                            )}>
+                                                <Activity size={16} /> 
+                                                {selectedIndividual.screening.title || "Health Assessment"}
+                                            </p>
+                                            <p className="text-stone-600 text-sm mt-3 leading-relaxed">
+                                                The NutriAgent Brain has classified this individual as: <b>{selectedIndividual.screening.badge}</b>. 
+                                                Suggested follow-up protocol: <b>Every {selectedIndividual.screening.monitoring_freq}</b>.
+                                            </p>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4 text-stone-300">
+                                        <Heart size={32} />
+                                    </div>
+                                    <p className="text-stone-400 font-bold italic">No specialized screening data available for this record type.</p>
+                                </div>
+                            )}
+
+                            <Button onClick={() => setShowModal(false)} className="w-full py-4 rounded-2xl bg-[#5A5A40] text-white font-bold shadow-xl">
+                                Close Assessment
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 };

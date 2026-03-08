@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>{{ subject }}</title>
+    <style>
+        body {
+            background-color: #F9F8F6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background-color: #F27D26;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-family: 'Georgia', serif;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+
+        .content {
+            padding: 40px 30px;
+            color: #444444;
+            line-height: 1.6;
+        }
+
+        .summary-card {
+            background-color: #FDF7F2;
+            border-left: 4px solid #F27D26;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .recommendation {
+            background-color: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+
+        .footer {
+            background-color: #F9F8F6;
+            padding: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #888888;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #F27D26;
+            color: #ffffff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .severity-High {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .severity-Medium {
+            background-color: #ffedd5;
+            color: #c2410c;
+        }
+
+        .severity-Low {
+            background-color: #dcfce7;
+            color: #15803d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>NutriAgent </h1>
+        </div>
+        <div class="content">
+            <h2 style="font-family: 'Georgia', serif; color: #1a1a1a;">{{ title }}</h2>
+            <p>Hello {{ username }},</p>
+
+            <div class="summary-card">
+                <p style="margin: 0; font-weight: bold; color: #F27D26;">Summary</p>
+                <p style="margin: 5px 0 0 0;">{{ summary }}</p>
+            </div>
+
+            {% if insight %}
+            <div style="margin-bottom: 25px;">
+                <p style="font-weight: bold; color: #1a1a1a;">Behavioral Insight</p>
+                <p>{{ insight }}</p>
+            </div>
+            {% endif %}
+
+            {% if recommendations %}
+            <div class="recommendation">
+                <p style="margin: 0; font-weight: bold; color: #059669;">Your Recommendations</p>
+                <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                    {% for rec in recommendations %}
+                    <li>{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if motivation %}
+            <p style="font-style: italic; margin-top: 30px; color: #666;">
+                "{{ motivation }}"
+            </p>
+            {% endif %}
+
+            <div style="text-align: center;">
+                <a href="{{ dashboard_url }}" class="button" style="color: #ffffff;">Open Dashboard</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Sent with ❤️ from your Personal Health Coach in Uganda.</p>
+            <p>You received this because you are an active NutriAgent user.</p>
+        </div>
+    </div>
+</body>
+
+</html>

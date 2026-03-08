@@ -1,0 +1,74 @@
+services:
+  # 1. Django Backend (API & Admin)
+  - type: web
+    name: nutrition-ai-backend
+    env: python
+    buildCommand: "pip install -r myproject/requirements.txt && python myproject/manage.py collectstatic --noinput && python myproject/manage.py migrate"
+    startCommand: "gunicorn --chdir myproject myproject.wsgi:application"
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "*" # Better to update to your specific domain after first deploy
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nutrition-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: nutrition-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: nutrition-redis
+          property: connectionString
+      - key: GROQ_API_KEY
+        sync: false # Set manually in Render Dashboard
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://nutrition-ai-frontend.onrender.com" # Replace with your frontend URL
+
+  # 2. Celery Worker (Background Reasoning & Email Alerts)
+  - type: worker
+    name: nutrition-ai-worker
+    env: python
+    buildCommand: "pip install -r myproject/requirements.txt"
+    startCommand: "celery -A myproject.celery_config --chdir myproject worker --loglevel=info"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nutrition-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: nutrition-redis
+          property: connectionString
+      - key: GROQ_API_KEY
+        sync: false
+
+  # 3. Static Site (Frontend React Dashboard)
+  - type: static
+    name: nutrition-ai-frontend
+    buildCommand: "cd frontend && npm install && npm run build"
+    publishPath: "frontend/dist"
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://nutrition-ai-backend.onrender.com/api
+
+# 4. Databases
+databases:
+  - name: nutrition-db
+    plan: free
+
+# 5. Redis (Speed & Task Management)
+redis:
+  - name: nutrition-redis
+    plan: free
+    ipAllowList: [] # Set to empty to allow internal access from services

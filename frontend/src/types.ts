@@ -2,21 +2,26 @@
 export type Language = 'en' | 'lg' | 'sw' | 'ach';
 
 export interface FoodItem {
-  id: string;
+  id: number;
   name: string;
-  localName?: string;
-  category: 'staple' | 'protein' | 'vegetable' | 'fruit' | 'fat' | 'snack';
+  category: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  iron?: number;
-  vitaminA?: number;
-  zinc?: number;
-  description: string;
-  preparation?: string;
-  seasonalAvailability: string[]; // months
-  typicalPriceRange?: 'low' | 'medium' | 'high';
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  iron: number;
+  calcium: number;
+  glycemic_index: number;
+  is_processed: boolean;
+  region: string;
+  season: string;
+  health_tags: string[];
+  allergens: string[];
+  price: number;
+  preparation: string;
 }
 
 export interface UserProfile {
@@ -59,10 +64,14 @@ export interface DashboardData {
   consistencyScore: number;
   calorieTrend: string;
   aiInsight?: {
+    insight_type: 'general' | 'briefing';
     summary: string;
     behavioral_insight: string;
     risk_level: string;
+    motivation?: string;
   };
+  predictedMeal?: { name: string; localName?: string; calories: number; is_fallback?: boolean; reason?: string };
+  trendData?: { date: string; calories: number; protein: number; carbs: number; fats: number }[];
 }
 
 export const UGANDAN_FOODS: FoodItem[] = [

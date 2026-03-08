@@ -1,0 +1,52 @@
+@id,food_name,category,serving_size_grams,calories_per_100g,protein_g,carbohydrates_g,fat_g,fiber_g,sugar_g,sodium_mg,iron_mg,calcium_mg,glycemic_index,is_processed,region_common,seasonal_availability,health_tags,allergens,estimated_cost_ugx
+1,Matooke,Staple,100,89,1.3,23.0,0.3,2.6,12.0,4,0.6,3,55,FALSE,Central/Western,Year-round,energy-rich|potassium-source|gluten-free,none,800
+2,Posho,Staple,100,362,7.0,77.0,1.5,2.4,0.5,2,2.1,7,70,FALSE,Nationwide,Year-round,energy-rich|iron-source,gluten,500
+3,Cassava,Staple,100,160,1.4,38.0,0.3,1.8,1.7,14,0.3,20,55,FALSE,Nationwide,Year-round,gluten-free|drought-resistant,none,600
+4,Sweet Potatoes,Staple,100,86,1.6,20.0,0.1,3.0,4.2,55,0.6,30,63,FALSE,Nationwide,Year-round,vitamin-A-rich|fiber-rich|gluten-free,none,700
+5,Irish Potatoes,Staple,100,77,2.0,17.0,0.1,2.2,0.8,6,0.8,12,82,FALSE,Western/Central,Year-round,vitamin-C-source|potassium-rich,none,900
+6,Rice,Staple,100,365,7.1,80.0,0.7,1.3,0.1,5,0.8,28,73,FALSE,Nationwide,Year-round,energy-rich|gluten-free,none,1200
+7,Beans,Legume,100,347,21.0,63.0,1.2,15.0,2.3,24,5.0,143,29,FALSE,Nationwide,Year-round,protein-rich|iron-rich|fiber-rich,none,1500
+8,Millet,Grain,100,378,11.0,73.0,4.2,8.5,1.5,5,3.0,8,71,FALSE,Northern/Eastern,Year-round,iron-rich|calcium-source|gluten-free,none,800
+9,Groundnuts,Legume,100,567,25.8,16.0,49.0,8.5,4.0,18,2.3,62,14,FALSE,Nationwide,Year-round,protein-rich|healthy-fats|vitamin-E,peanuts,2000
+10,Cabbage,Vegetable,100,25,1.3,5.8,0.1,2.5,3.2,18,0.5,40,15,FALSE,Nationwide,Year-round,vitamin-C-rich|low-calorie|fiber-rich,none,500
+11,Sukuma Wiki,Vegetable,100,35,2.4,6.0,0.4,2.0,1.5,46,1.5,130,15,FALSE,Nationwide,Year-round,iron-rich|calcium-rich|vitamin-A,none,500
+12,Tomatoes,Vegetable,100,18,0.9,3.9,0.2,1.2,2.6,5,0.3,10,30,FALSE,Nationwide,Year-round,vitamin-C-source|antioxidant|lycopene,none,600
+13,Onions,Vegetable,100,40,1.1,9.3,0.1,1.7,4.2,4,0.2,23,10,FALSE,Nationwide,Year-round,antioxidant|anti-inflammatory,none,700
+14,Avocado,Fruit,100,160,2.0,9.0,15.0,6.7,0.7,7,0.6,12,40,FALSE,Central/Western,Year-round,healthy-fats|potassium-rich|folate-source,none,1000
+15,Mango,Fruit,100,60,0.8,15.0,0.4,1.6,13.7,1,0.2,11,51,FALSE,Nationwide,Oct-Jan,vitamin-C-rich|vitamin-A-rich|antioxidant,none,500
+16,Pineapple,Fruit,100,50,0.5,13.0,0.1,1.4,9.9,1,0.3,13,66,FALSE,Central/Eastern,Year-round,vitamin-C-rich|bromelain|anti-inflammatory,none,800
+17,Passion Fruit,Fruit,100,97,2.2,23.0,0.7,10.4,11.2,28,1.6,12,30,FALSE,Central/Western,Year-round,fiber-rich|vitamin-C|antioxidant,none,1000
+18,Pawpaw,Fruit,100,43,0.5,11.0,0.3,1.7,7.8,8,0.3,20,60,FALSE,Nationwide,Year-round,vitamin-C-rich|digestive-health|vitamin-A,none,500
+19,Luwombo,Traditional Dish,100,180,12.0,8.0,11.0,2.0,2.0,320,1.8,30,45,FALSE,Central (Buganda),Year-round,protein-rich|traditional,none,5000
+20,Rolex,Street Food,100,250,9.0,28.0,12.0,2.0,3.0,480,2.0,60,55,TRUE,Urban/Nationwide,Year-round,protein-source|energy-rich,gluten|eggs,1500
+21,Groundnut Sauce,Sauce,100,380,14.0,12.0,32.0,4.0,3.0,250,1.8,40,25,FALSE,Nationwide,Year-round,protein-rich|healthy-fats,peanuts,2000
+22,Malewa,Traditional Dish,100,45,4.5,7.0,0.8,3.5,1.0,10,0.5,25,35,FALSE,Eastern (Bugisu),Jun-Sep,fiber-rich|low-calorie|traditional,none,3000
+23,Sombe,Traditional Dish,100,55,4.0,8.0,1.0,4.0,1.5,35,3.5,150,20,FALSE,Central/Western,Year-round,iron-rich|calcium-rich|folate-source,none,1000
+24,Mugoyo,Traditional Dish,100,120,2.5,28.0,0.5,3.5,6.0,20,0.8,30,58,FALSE,Central (Buganda),Year-round,energy-rich|traditional,none,1500
+25,Katogo,Traditional Dish,100,160,6.0,22.0,6.0,3.5,2.5,280,1.5,45,50,FALSE,Central (Buganda),Year-round,protein-source|balanced-meal|traditional,none,3000
+26,Nsenene,Insect Protein,100,430,50.0,5.0,25.0,2.0,0.5,180,8.0,55,5,FALSE,Central/Western,Nov-Dec|May-Jun,protein-rich|iron-rich|sustainable-protein,none,8000
+27,Kikalayi,Snack,100,290,15.0,5.0,24.0,0.5,0.3,350,2.5,20,30,TRUE,Central (Kampala),Year-round,protein-rich|high-fat,none,2000
+28,Muchomo,Meat Dish,100,220,25.0,0.5,13.0,0.0,0.3,380,2.8,15,0,FALSE,Nationwide,Year-round,protein-rich|iron-source|low-carb,none,5000
+29,Pilau,Traditional Dish,100,180,9.0,22.0,6.0,2.0,1.5,420,2.0,40,55,FALSE,Eastern/Northern,Year-round,protein-source|spiced|energy-rich,gluten,3500
+30,Eshabwe,Traditional Dish,100,520,2.5,1.0,56.0,0.0,0.5,180,0.2,10,5,FALSE,Western (Ankole),Year-round,energy-dense|traditional|saturated-fat,dairy,4000
+31,Chapati,Staple,100,320,8.0,50.0,10.0,2.5,1.0,380,3.0,20,62,TRUE,Urban/Nationwide,Year-round,energy-rich|iron-source,gluten,500
+32,Egg Roll,Street Food,100,270,10.0,28.0,13.0,1.5,2.0,450,2.0,55,58,TRUE,Urban,Year-round,protein-source|energy-rich,gluten|eggs,2000
+33,Gonja,Snack,100,122,1.3,32.0,0.4,2.3,14.0,4,0.6,6,65,FALSE,Nationwide,Year-round,energy-rich|potassium-source|gluten-free,none,500
+34,Mandazi,Snack,100,350,6.0,55.0,12.0,1.5,10.0,280,2.0,30,70,TRUE,Nationwide,Year-round,energy-rich,gluten|eggs,500
+35,Cassava Chips,Snack,100,340,1.5,80.0,1.5,3.5,1.0,350,0.5,20,72,TRUE,Nationwide,Year-round,gluten-free|energy-rich,none,1000
+36,Chips,Snack,100,312,3.5,41.0,15.0,3.5,0.5,320,0.9,15,75,TRUE,Urban/Nationwide,Year-round,energy-dense,none,2000
+37,Samosa,Snack,100,270,7.0,32.0,13.0,2.5,1.5,480,2.0,25,60,TRUE,Urban/Nationwide,Year-round,energy-rich,gluten,1000
+38,Bushera,Beverage,100,68,1.5,15.0,0.4,1.2,3.5,8,0.8,12,45,FALSE,Western/Central,Year-round,probiotic|energy-source|traditional,gluten,500
+39,Pineapple Juice,Beverage,100,53,0.3,13.0,0.1,0.2,10.0,2,0.2,8,66,TRUE,Nationwide,Year-round,vitamin-C-source|hydrating,none,1500
+40,Mango Juice,Beverage,100,60,0.4,15.0,0.2,0.3,12.5,5,0.2,10,60,TRUE,Nationwide,Oct-Jan,vitamin-A-source|vitamin-C,none,1500
+41,Banana Juice,Beverage,100,55,0.5,14.0,0.1,0.3,10.0,3,0.2,5,55,TRUE,Central/Western,Year-round,potassium-source|energy-rich,none,1000
+42,Orange Juice,Beverage,100,45,0.7,10.0,0.2,0.2,8.5,1,0.1,11,52,TRUE,Nationwide,Jun-Sep,vitamin-C-rich|folate-source,none,1500
+43,Beef,Meat,100,250,26.0,0.0,17.0,0.0,0.0,72,2.6,18,0,FALSE,Nationwide,Year-round,protein-rich|iron-rich|zinc-source,none,8000
+44,Goat Meat,Meat,100,143,27.0,0.0,3.0,0.0,0.0,86,2.8,13,0,FALSE,Nationwide,Year-round,protein-rich|lean-meat|iron-source,none,7000
+45,Pork,Meat,100,242,27.0,0.0,14.0,0.0,0.0,62,1.0,19,0,FALSE,Nationwide,Year-round,protein-rich|B-vitamins|zinc-source,none,6000
+46,Chicken,Meat,100,165,31.0,0.0,3.6,0.0,0.0,74,1.0,15,0,FALSE,Nationwide,Year-round,protein-rich|low-fat|niacin-source,none,7000
+47,Turkey,Meat,100,135,30.0,0.0,1.0,0.0,0.0,70,1.5,21,0,FALSE,Urban/Central,Year-round,protein-rich|low-fat|selenium-source,none,10000
+48,Tilapia,Fish,100,128,26.0,0.0,2.7,0.0,0.0,56,0.6,14,0,FALSE,Nationwide (Lake regions),Year-round,protein-rich|omega-3|low-fat,fish,4000
+49,Nile Perch,Fish,100,131,23.0,0.0,4.5,0.0,0.0,68,0.8,20,0,FALSE,Lake Victoria regions,Year-round,protein-rich|omega-3|phosphorus-source,fish,5000
+50,Liver (Beef),Organ Meat,100,175,27.0,4.0,5.0,0.0,0.0,80,6.2,11,0,FALSE,Nationwide,Year-round,iron-rich|vitamin-A-rich|B12-source,none,3000
+51,Tripe,Organ Meat,100,85,15.0,0.0,3.0,0.0,0.0,97,0.5,12,0,FALSE,Nationwide,Year-round,protein-source|low-fat|collagen-rich,none,2000

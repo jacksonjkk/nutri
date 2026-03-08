@@ -35,6 +35,7 @@ export const Profile = ({ userProfile, onUpdate }: ProfileProps) => {
         const backendData = {
             ...formData,
             full_name: formData.name,
+            medical_conditions: formData.conditions,
             goal: (formData.goals && formData.goals.length > 0) ? formData.goals[0] : 'maintenance',
             region: formData.region,
             district: formData.district,
@@ -84,13 +85,13 @@ export const Profile = ({ userProfile, onUpdate }: ProfileProps) => {
 
             <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Measurements Card */}
-                <Card className="p-8 bg-white/50 backdrop-blur-sm">
+                <Card className="p-5 sm:p-8 bg-white/50 backdrop-blur-sm">
                     <h3 className="text-xl font-serif font-bold text-stone-800 mb-6 flex items-center gap-2">
                         <div className="w-2 h-6 bg-[#5A5A40] rounded-full" />
                         Body Measurements
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2 col-span-2">
+                        <div className="space-y-2 col-span-1 md:col-span-2">
                             <label className="text-xs font-bold text-stone-400 uppercase tracking-widest">Full Name</label>
                             <input
                                 type="text"
@@ -202,6 +203,41 @@ export const Profile = ({ userProfile, onUpdate }: ProfileProps) => {
                             );
                         })}
                     </div>
+                </div>
+
+                {/* Health Conditions Section */}
+                <div className="space-y-6">
+                    <h3 className="text-xl font-serif font-bold text-stone-800 flex items-center gap-2 px-2">
+                        <div className="w-2 h-6 bg-rose-500 rounded-full" />
+                        Health Conditions
+                    </h3>
+                    <div className="flex flex-wrap gap-2 px-2">
+                        {['Hypertension', 'Diabetes', 'Malaria Recovery', 'Anemia', 'Low Pressure'].map((condition) => {
+                            const active = (formData.conditions || []).includes(condition);
+                            return (
+                                <button
+                                    key={condition}
+                                    type="button"
+                                    onClick={() => {
+                                        const current = formData.conditions || [];
+                                        const next = current.includes(condition)
+                                            ? current.filter(c => c !== condition)
+                                            : [...current, condition];
+                                        setFormData({ ...formData, conditions: next });
+                                    }}
+                                    className={cn(
+                                        "px-4 py-2 rounded-2xl border-2 text-xs font-bold transition-all",
+                                        active
+                                            ? "border-rose-500 bg-rose-50 text-rose-700"
+                                            : "border-stone-100 bg-white text-stone-400 hover:border-stone-200"
+                                    )}
+                                >
+                                    {condition}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <p className="text-[10px] text-stone-400 px-2">Select any conditions to trigger the AI Safety Alert system.</p>
                 </div>
 
                 {/* Activity Level */}
